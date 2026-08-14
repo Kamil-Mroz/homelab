@@ -1,0 +1,45 @@
+services:
+  dns-server-1:
+    container_name: dns-server-1
+    image: docker.io/technitium/dns-server:latest
+
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - watchtower
+      - homepage
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "5380:5380/tcp"
+      - "53443:53443/tcp"
+      - "853:853/udp"
+      - "853:853/tcp"
+      - "443:443/udp"
+      - "8053:8053/tcp"
+    labels:
+      - "com.centrurylinklabs.watchtower.enable=false"
+      - "traefik.enable=true"
+      - "traefik.http.routers.technitium.entrypoints=websecure"
+      - "traefik.http.routers.technitium.rule=Host(`dns.${DOMAIN}`)"
+      - "traefik.http.routers.technitium.tls=true"
+      - "traefik.http.services.technitium.loadbalancer.server.port=5380"
+      - "traefik.http.routers.technitium.tls.certresolver=cloudflare"
+      - "homepage.group=Network"
+      - "homepage.name=Technitium"
+      - "homepage.icon=technitium.png"
+      - "homepage.href=https://dns.${DOMAIN}"
+      - "homepage.description=Local DNS and ad blocking"
+      - "homepage.widget.type=technitium"
+      - "homepage.widget.url=http://dns-server-1:5380"
+      - "homepage.widget.key=${TECHNITIUM_API_KEY}"
+    environment:
+      - DNS_SERVER_DOMAIN=dns.${DOMAIN}
+      - DNS_SERVER_ADMIN_PASSWORD=${TECHNITIUM_PASSWORD}
+      - "DNS_SERVER_FORWARDERS=1.1.1.1, 8.8.8.8"
+    volumes:
+      - ./config:/etc/dns
+    restart: always
+
+

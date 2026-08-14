@@ -1,0 +1,37 @@
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 5s
+    volumes:
+      - ./data:/app/data
+
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - socket-proxy
+      - homepage
+      - watchtower
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime.rule=Host(`uptime.${DOMAIN}`)"
+      - "traefik.http.routers.uptime.entryPoints=websecure"
+      - "traefik.http.routers.uptime.tls=true"
+      - "traefik.http.routers.uptime.tls.certresolver=myresolver"
+      - traefik.http.services.uptime.loadbalancer.server.port=3001
+      - "com.centrurylinklabs.watchtower.enable=true"
+      - "homepage.group=Network"
+      - "homepage.name=Uptime Kuma"
+      - "homepage.icon=uptime-kuma.png"
+      - "homepage.href=https://uptime.${DOMAIN}"
+      - "homepage.description=Service monitoring"
+      - "homepage.widget.type=uptimekuma"
+      - "homepage.widget.url=http://uptime-kuma:3001"
+      - "homepage.widget.slug=all"

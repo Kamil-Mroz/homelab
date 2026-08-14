@@ -1,0 +1,34 @@
+include:
+  - ./homepage/docker-compose.yml
+  - ./traefik/docker-compose.yml
+  - ./socket-proxy/docker-compose.yml
+  - ./watchtower/docker-compose.yml
+  # - ./projects/zero-waste/docker-compose.yml
+  - ./projects/portfolio/docker-compose.yml
+  - ./immich/docker-compose.yml
+  - ./pgadmin/docker-compose.yml
+  - ./uptime-kuma/docker-compose.yml
+  - ./zerobyte/docker-compose.yml
+  - ./vaultwarden/docker-compose.yml
+  - ./technitium/docker-compose.yml
+  - ./it-tools/docker-compose.yml
+  - ./excalidraw/docker-compose.yml
+  - ./dozzle/docker-compose.yml
+  - ./cloudflared/docker-compose.yml
+
+networks:
+  proxy:
+    name: proxy
+    driver: bridge
+
+  socket-proxy:
+    name: socket-proxy
+    driver: bridge
+
+  homepage:
+    name: homepage
+    driver: bridge
+
+  watchtower:
+    name: watchtower
+    driver: bridge

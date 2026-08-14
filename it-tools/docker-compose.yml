@@ -1,0 +1,31 @@
+services:
+  it-tools:
+    image: corentinth/it-tools:latest
+    restart: always
+    container_name: it-tools
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 5s
+    networks:
+      - proxy
+      - watchtower
+      - homepage
+    labels:
+      - "com.centrurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.it-tools.entrypoints=websecure"
+      - "traefik.http.routers.it-tools.rule=Host(`it-tools.${DOMAIN}`)"
+      - "traefik.http.routers.it-tools.tls=true"
+      - "traefik.http.services.it-tools.loadbalancer.server.port=80"
+      - "traefik.http.routers.it-tools.tls.certresolver=cloudflare"
+      - "homepage.group=Tools"
+      - "homepage.name=It tools"
+      - "homepage.icon=it-tools.png"
+      - "homepage.href=https://it-tools.${DOMAIN}"
+      - "homepage.description=Tools collection for devs"
+
+    security_opt:
+      - no-new-privileges:true

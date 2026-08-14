@@ -1,0 +1,39 @@
+services:
+  pgadmin:
+    image: dpage/pgadmin4:9.17
+    container_name: pgadmin
+
+
+    labels:
+      - "com.centrurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.${DOMAIN}`)"
+      - "traefik.http.routers.pgadmin.entryPoints=websecure"
+      - "traefik.http.routers.pgadmin.tls=true"
+      - "traefik.http.routers.pgadmin.tls.certresolver=cloudflare"
+      - traefik.http.services.pgadmin.loadbalancer.server.port=8080
+      - "homepage.group=Development"
+      - "homepage.name=pgAdmin"
+      - "homepage.icon=pgadmin.png"
+      - "homepage.href=https://pgadmin.${DOMAIN}"
+      - "homepage.description=Database manager"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PG_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PG_PASSWORD}
+
+    security_opt:
+      - no-new-privileges:true
+
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - proxy
+      - homepage
+      - watchtower
+
+    restart: always
+
+
+volumes:
+  pgadmin_data:
+

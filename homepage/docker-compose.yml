@@ -1,0 +1,33 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    volumes:
+      - ./config:/app/config
+      - ${STORAGE_ROOT}:/mnt/storage
+      - ${BACKUP_ROOT}:/mnt/backups
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=home.${DOMAIN} # required, may need port. See gethomepage.dev/installation/#homepage_allowed_hosts
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+
+    labels:
+      - "com.centrurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.homepage.rule=Host(`home.${DOMAIN}`)"
+      - "traefik.http.routers.homepage.entryPoints=websecure"
+      - "traefik.http.routers.homepage.tls=true"
+      - "traefik.http.routers.homepage.tls.certresolver=cloudflare"
+      - traefik.http.services.homepage.loadbalancer.server.port=3000
+    networks:
+      - homepage
+      - socket-proxy
+      - proxy
+      - watchtower
+    depends_on:
+      - socket-proxy
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+

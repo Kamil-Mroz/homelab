@@ -1,0 +1,20 @@
+services:
+  tunnel:
+    container_name: cloudflared-tunnel
+    image: cloudflare/cloudflared:latest
+    restart: always
+    command: tunnel  run
+    networks:
+      - proxy
+      - homepage
+      - watchtower
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    labels:
+      - "com.centrurylinklabs.watchtower.enable=true"
+      - "homepage.group=Development"
+      - "homepage.icon=cloudflare.png"
+      - "homepage.name=Cloudflare"
+      - "homepage.description=Tunnel"
+    security_opt:
+      - no-new-privileges:true

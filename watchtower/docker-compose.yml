@@ -1,0 +1,33 @@
+services:
+  watchtower:
+    image: nickfedor/watchtower:latest
+    restart: always
+    container_name: watchtower
+
+    environment:
+      - DOCKER_HOST=tcp://socket-proxy:2375
+      - TZ=${TZ}
+      - WATCHTOWER_CLEANUP=true
+      - "WATCHTOWER_SCHEDULE=0 3 * * *"
+      - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_HTTP_API_METRICS=true
+      - WATCHTOWER_HTTP_API_TOKEN=${WATCHTOWER_API_KEY}
+      - WATCHTOWER_NO_STARTUP_MESSAGE=true
+    networks:
+      - homepage
+      - socket-proxy
+      - watchtower
+    depends_on:
+      - socket-proxy
+    labels:
+      - "com.centrurylinklabs.watchtower.enable=true"
+      - "homepage.group=Maintenance"
+      - "homepage.icon=watchtower.png"
+      - "homepage.name=Watchtower"
+      - "homepage.description=Automatic container updates"
+      - "homepage.widget.type=watchtower"
+      - "homepage.widget.url=http://watchtower:8080"
+      - "homepage.widget.key=${WATCHTOWER_API_KEY}"
+
+    security_opt:
+      - no-new-privileges:true

@@ -1,0 +1,58 @@
+# Run with docker compose up -d
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    volumes:
+      - dozzle_data:/data
+
+    healthcheck:
+        test: ["CMD", "/dozzle", "healthcheck"]
+        interval: 3s
+        timeout: 30s
+        retries: 5
+        start_period: 30s
+
+    security_opt:
+      - no-new-privileges:true
+
+    container_name: dozzle
+    networks:
+      - proxy
+      - homepage
+      - watchtower
+      - socket-proxy
+    restart: always
+    labels:
+      - "com.centrurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.dozzle.rule=Host(`dozzle.${DOMAIN}`)"
+      - "traefik.http.routers.dozzle.entryPoints=websecure"
+      - "traefik.http.routers.dozzle.tls=true"
+      - "traefik.http.routers.dozzle.tls.certresolver=cloudflare"
+      - traefik.http.services.dozzle.loadbalancer.server.port=8080
+      - "homepage.group=Network"
+      - "homepage.name=Dozzle"
+      - "homepage.icon=dozzle.png"
+      - "homepage.href=https://dozzle.${DOMAIN}"
+      - "homepage.description=Log viewer for Docker"
+    environment:
+      - DOZZLE_REMOTE_HOST=tcp://socket-proxy:2375
+      # Uncomment to enable container actions (stop, start, restart). See https://dozzle.dev/guide/actions
+      # - DOZZLE_ENABLE_ACTIONS=true
+      #
+      # Uncomment to allow access to container shells. See https://dozzle.dev/guide/shell
+      # - DOZZLE_ENABLE_SHELL=true
+      #
+      # Uncomment to enable authentication. See https://dozzle.dev/guide/authentication
+      # - DOZZLE_AUTH_PROVIDER=simple
+      #
+      # Label this Dozzle instance (shown in the header and multi-host menu). See https://dozzle.dev/guide/hostname
+      # - DOZZLE_HOSTNAME=my-server
+      #
+      # Connect to one or more remote agents to monitor other Docker hosts. See https://dozzle.dev/guide/agent
+      # - DOZZLE_REMOTE_AGENT=192.168.1.10:7007,192.168.1.11:7007
+      #
+      # Only show containers matching a filter. See https://dozzle.dev/guide/filters
+      # - DOZZLE_FILTER=label=com.example.app
+volumes:
+  dozzle_data:

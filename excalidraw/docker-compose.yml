@@ -1,0 +1,31 @@
+services:
+  excalidraw:
+    image: excalidraw/excalidraw:latest
+    container_name: excalidraw
+    restart: always
+    networks:
+      - proxy
+      - watchtower
+      - homepage
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.centrurylinklabs.watchtower.enable=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.excalidraw.entrypoints=websecure"
+      - "traefik.http.routers.excalidraw.rule=Host(`ex.${DOMAIN}`)"
+      - "traefik.http.routers.excalidraw.tls=true"
+      - "traefik.http.services.excalidraw.loadbalancer.server.port=80"
+      - "traefik.http.routers.excalidraw.tls.certresolver=cloudflare"
+      - "homepage.group=Tools"
+      - "homepage.name=Excalidraw"
+      - "homepage.icon=excalidraw.png"
+      - "homepage.href=https://ex.${DOMAIN}"
+      - "homepage.description=Draw"
+
+    security_opt:
+      - no-new-privileges:true
+

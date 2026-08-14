@@ -1,0 +1,43 @@
+services:
+  zerobyte:
+    image: ghcr.io/nicotsx/zerobyte:v0.41
+    container_name: zerobyte
+    restart: always
+    #cap_add:
+    #  - SYS_ADMIN
+    #ports:
+    #  - "4096:4096"
+    #devices:
+    #  - /dev/fuse:/dev/fuse
+
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.zero.rule=Host(`zb.${DOMAIN}`)"
+      - "traefik.http.routers.zero.entryPoints=websecure"
+      - "traefik.http.routers.zero.tls=true"
+      - "traefik.http.routers.zero.tls.certresolver=cloudflare"
+      - traefik.http.services.zero.loadbalancer.server.port=4096
+      - "com.centrurylinklabs.watchtower.enable=true"
+      - "homepage.name=Zerobyte"
+      - "homepage.group=Security"
+      - "homepage.icon=zerobyte.png"
+      - "homepage.description=Backup system"
+      - "homepage.href=https://zb.${DOMAIN}"
+    environment:
+      - TZ=Europe/Warsaw # Set your timezone here
+      - BASE_URL=https://zb.${DOMAIN} # URL you will use to access Zerobyte
+      - APP_SECRET=${ZERO_BYTE_SECRET} # Generate your own secret with `openssl rand -hex 32`
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/lib/zerobyte:/var/lib/zerobyte
+      - ${DIR_TO_BACKUP_1}:/data
+      - ${BACKUP_LOCATION}/restic:/restic
+      - ${DIR_TO_BACKUP_2}:${LABEL_IN_ZEROBYTE}
+    networks:
+      - proxy
+      - homepage
+      - watchtower
+
+    security_opt:
+      - no-new-privileges:true
