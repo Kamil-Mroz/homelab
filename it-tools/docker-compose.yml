@@ -14,7 +14,7 @@ services:
       - watchtower
       - homepage
     labels:
-      - "com.centrurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
       - "traefik.http.routers.it-tools.entrypoints=websecure"
       - "traefik.http.routers.it-tools.rule=Host(`it-tools.${DOMAIN}`)"
@@ -26,6 +26,7 @@ services:
       - "homepage.icon=it-tools.png"
       - "homepage.href=https://it-tools.${DOMAIN}"
       - "homepage.description=Tools collection for devs"
+      - "homepage.weight=8"
 
     security_opt:
       - no-new-privileges:true

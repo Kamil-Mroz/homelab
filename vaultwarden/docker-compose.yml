@@ -26,7 +26,7 @@ services:
       - "traefik.http.routers.vaultwarden.entrypoints=websecure"
       - "traefik.http.routers.vaultwarden.tls=true"
       - "traefik.http.routers.vaultwarden.tls.certresolver=cloudflare"
-      - "com.centrurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
       - "homepage.group=Security"
       - "homepage.name=Vaultwarden"
       - "homepage.icon=vaultwarden-light.png"

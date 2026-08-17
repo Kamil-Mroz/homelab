@@ -5,10 +5,10 @@ services:
     container_name: watchtower
 
     environment:
-      - DOCKER_HOST=tcp://socket-proxy:2375
+      - DOCKER_HOST=tcp://watchtower-docker-proxy:2375
       - TZ=${TZ}
       - WATCHTOWER_CLEANUP=true
-      - "WATCHTOWER_SCHEDULE=0 3 * * *"
+      - "WATCHTOWER_SCHEDULE=0 19 * * *"
       - WATCHTOWER_LABEL_ENABLE=true
       - WATCHTOWER_HTTP_API_METRICS=true
       - WATCHTOWER_HTTP_API_TOKEN=${WATCHTOWER_API_KEY}
@@ -17,10 +17,11 @@ services:
       - homepage
       - socket-proxy
       - watchtower
+      - watchtower-internal
     depends_on:
-      - socket-proxy
+      - watchtower-docker-proxy
     labels:
-      - "com.centrurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.enable=false"
       - "homepage.group=Maintenance"
       - "homepage.icon=watchtower.png"
       - "homepage.name=Watchtower"
@@ -28,6 +29,55 @@ services:
       - "homepage.widget.type=watchtower"
       - "homepage.widget.url=http://watchtower:8080"
       - "homepage.widget.key=${WATCHTOWER_API_KEY}"
+      - "homepage.weight=7"
 
+    security_opt:
+      - no-new-privileges:true
+
+  watchtower-docker-proxy:
+    container_name: watchtower-docker-proxy
+    image: lscr.io/linuxserver/socket-proxy:latest
+    restart: always
+    labels:
+    - "com.centurylinklabs.watchtower.enable=false"
+    environment:
+      - ALLOW_START=1
+      - ALLOW_STOP=1
+      - ALLOW_RESTARTS=1
+      - ALLOW_PAUSE=0
+      - ALLOW_UNPAUSE=0
+      - AUTH=0
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - CONTAINERS=1
+      - DISABLE_IPV6=0
+      - DISTRIBUTION=0
+      - EVENTS=1
+      - EXEC=0
+      - IMAGES=1
+      - INFO=1
+      - LOG_LEVEL=info
+      - NETWORKS=1
+      - NODES=0
+      - PING=1
+      - PLUGINS=0
+      - POST=1
+      - SECRETS=0
+      - SERVICES=1
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - TASKS=1
+      - TZ=${TZ}
+      - VERSION=1
+      - VOLUMES=1
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - watchtower-internal
+    read_only: true
+    tmpfs:
+      - /run
     security_opt:
       - no-new-privileges:true

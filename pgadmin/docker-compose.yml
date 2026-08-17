@@ -5,7 +5,7 @@ services:
 
 
     labels:
-      - "com.centrurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
       - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.${DOMAIN}`)"
       - "traefik.http.routers.pgadmin.entryPoints=websecure"

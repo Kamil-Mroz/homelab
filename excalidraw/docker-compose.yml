@@ -13,7 +13,7 @@ services:
       timeout: 10s
       retries: 3
     labels:
-      - "com.centrurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
       - "traefik.http.routers.excalidraw.entrypoints=websecure"
       - "traefik.http.routers.excalidraw.rule=Host(`ex.${DOMAIN}`)"
@@ -25,6 +25,7 @@ services:
       - "homepage.icon=excalidraw.png"
       - "homepage.href=https://ex.${DOMAIN}"
       - "homepage.description=Draw"
+      - "homepage.weight=9"
 
     security_opt:
       - no-new-privileges:true

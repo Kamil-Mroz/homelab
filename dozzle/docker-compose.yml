@@ -23,7 +23,7 @@ services:
       - socket-proxy
     restart: always
     labels:
-      - "com.centrurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
       - "traefik.enable=true"
       - "traefik.http.routers.dozzle.rule=Host(`dozzle.${DOMAIN}`)"
       - "traefik.http.routers.dozzle.entryPoints=websecure"
@@ -35,6 +35,7 @@ services:
       - "homepage.icon=dozzle.png"
       - "homepage.href=https://dozzle.${DOMAIN}"
       - "homepage.description=Log viewer for Docker"
+      - "homepage.weight=9"
     environment:
       - DOZZLE_REMOTE_HOST=tcp://socket-proxy:2375
       # Uncomment to enable container actions (stop, start, restart). See https://dozzle.dev/guide/actions

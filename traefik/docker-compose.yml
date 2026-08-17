@@ -30,7 +30,7 @@ services:
       timeout: 5s
 
     labels:
-      - "com.centrurylinklabs.watchtower.enable=false"
+      - "com.centurylinklabs.watchtower.enable=false"
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`tr.${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
       - "traefik.http.routers.dashboard.service=api@internal"
@@ -46,4 +46,5 @@ services:
       - "homepage.icon=traefik.png"
       - "homepage.href=https://tr.${DOMAIN}/dashboard/"
       - "homepage.description=Reverse proxy"
+      - "homepage.weight=10"
 

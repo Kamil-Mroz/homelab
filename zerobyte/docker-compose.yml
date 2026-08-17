@@ -18,7 +18,7 @@ services:
       - "traefik.http.routers.zero.tls=true"
       - "traefik.http.routers.zero.tls.certresolver=cloudflare"
       - traefik.http.services.zero.loadbalancer.server.port=4096
-      - "com.centrurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
       - "homepage.name=Zerobyte"
       - "homepage.group=Security"
       - "homepage.icon=zerobyte.png"

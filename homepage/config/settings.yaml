@@ -13,23 +13,20 @@ layout:
   Applications:
     style: row
     columns: 4
-
   Development:
     style: row
     columns: 4
-
   Network:
     style: row
     columns: 4
-
-  Security:
-    style: row
-    columns: 4
-
-  Tools:
-    style: row
-    columns: 4
-
   Maintenance:
     style: row
     columns: 4
+  Security:
+    style: row
+    columns: 4
+  Tools:
+    style: row
+    columns: 4
+  Media:
+    style: row

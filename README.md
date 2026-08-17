@@ -509,14 +509,14 @@ For example:
 
 ```YAML
 labels:
-  - "com.centrurylinklabs.watchtower.enable=true"
+  - "com.centurylinklabs.watchtower.enable=true"
   ```
 
 Infrastructure-critical services can be excluded:
 
 ```YAML
 labels:
-  - "com.centrurylinklabs.watchtower.enable=false"
+  - "com.centurylinklabs.watchtower.enable=false"
   ```
 
 This allows updates to be controlled on a per-service basis.

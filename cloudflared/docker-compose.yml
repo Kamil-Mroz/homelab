@@ -4,6 +4,8 @@ services:
     image: cloudflare/cloudflared:latest
     restart: always
     command: tunnel  run
+    env_file:
+      - ~/homelab/.env
     networks:
       - proxy
       - homepage
@@ -11,10 +13,12 @@ services:
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     labels:
-      - "com.centrurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
       - "homepage.group=Development"
       - "homepage.icon=cloudflare.png"
       - "homepage.name=Cloudflare"
       - "homepage.description=Tunnel"
     security_opt:
       - no-new-privileges:true
+
+

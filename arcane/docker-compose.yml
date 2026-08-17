@@ -1,0 +1,90 @@
+services:
+  arcane:
+    image: ghcr.io/getarcaneapp/manager:latest
+    container_name: arcane
+    # ports:
+    #   - '3552:3552'
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+      - traefik.enable=true
+      - traefik.http.routers.arcane.rule=Host(`arcane.${DOMAIN}`)
+      - traefik.http.routers.arcane.entrypoints=websecure
+      - traefik.http.routers.arcane.tls=true
+      - traefik.http.routers.arcane.tls.certresolver=cloudflare
+      - "traefik.http.services.arcane.loadbalancer.server.port=3552"
+      - "homepage.group=Maintenance"
+      - "homepage.name=Arcane"
+      - "homepage.icon=arcane.png"
+      - "homepage.href=https://arcane.${DOMAIN}"
+      - "homepage.description=Manage containers"
+      - "homepage.widget.type=arcane"
+      - "homepage.widget.url=http://arcane:3552"
+      - "homepage.widget.key=${ARCANE_API_KEY}"
+      - "homepage.widget.env=0"
+      - "homepage.weight=8"
+
+    volumes:
+      - arcane-data:/app/data
+      - ${ARCANE_PROJECTS_PATH}:/app/data/projects
+    environment:
+      - APP_URL=https://arcane.${DOMAIN}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - LOG_LEVEL=info
+      - LOG_JSON=true
+      - ENCRYPTION_KEY=${ARCANE_ENCRYPTION_KEY}
+      - JWT_SECRET=${ARCANE_JWT_SECRET}
+      - DOCKER_HOST=tcp://arcane-docker-proxy:2375
+      - TZ=${TZ}
+    cgroup: host
+    restart: always
+    networks:
+      - homepage
+      - proxy
+      - watchtower
+      - arcane-internal
+    security_opt:
+      - no-new-privileges:true
+
+  arcane-docker-proxy:
+    image: lscr.io/linuxserver/socket-proxy:latest
+    container_name: arcane-docker-proxy
+    environment:
+      - EVENTS=1
+      - PING=1
+      - VERSION=1
+      - AUTH=0
+      - SECRETS=0
+      - POST=1
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - CONTAINERS=1
+      - DISTRIBUTION=0
+      - EXEC=1
+      - IMAGES=1
+      - INFO=1
+      - NETWORKS=1
+      - NODES=0
+      - PLUGINS=0
+      - SERVICES=0
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - TASKS=0
+      - VOLUMES=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - arcane-internal
+    restart: always
+    read_only: true
+    tmpfs:
+      - /run
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  arcane-data:
+
+
