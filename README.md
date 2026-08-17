@@ -42,6 +42,7 @@ docker-compose.yml
 ├── it-tools/docker-compose.yml
 ├── excalidraw/docker-compose.yml
 ├── dozzle/docker-compose.yml
+├── arcane/docker-compose.yml
 └── cloudflared/docker-compose.yml
 ```
 
@@ -59,6 +60,7 @@ This keeps each service isolated in its own directory while still allowing the e
 | [Technitium DNS](https://technitium.com/dns/) | Local DNS server and ad blocking |
 | [Uptime Kuma](https://github.com/louislam/uptime-kuma) |  Service monitoring |
 | [Dozzle](https://dozzle.dev/) | Docker container log viewer |
+| [Arcane](https://getarcane.app/) | Docker container management |
 | [Watchtower](https://containrrr.dev/watchtower/) | Automated container updates |
 | [ZeroByte](https://github.com/nicotsx/zerobyte) | Backup management |
 | [pgAdmin](https://www.pgadmin.org/) | PostgreSQL administration |
@@ -110,9 +112,11 @@ The homelab uses several dedicated Docker bridge networks.
 | Network | Purpose |
 |--|--|
 | `proxy` | Main network for services exposed through Traefik |
-| `socket-proxy` | Restricted Docker API access |
-| `homepage` | Communication with Homepage |
-| `watchtower` | Communication with Watchtower |
+| `socket-proxy` | Read-only Docker API access for services such as Traefik, Homepage, Updatime Kuma and Dozzle. |
+| `homepage` | Network used by Homepage and services providing dashboard integrations |
+| `watchtower` | Network used by Watchtower-related services |
+| `watchtower-internal` | Private network connecting Watchtower to its dedicated Docker socket proxy. |
+| `arcane-internal` | Private network connecting Arcane to its dedicated Docker socket proxy |
 
 The networks are defined centrally in the root Compose file.
 
@@ -130,6 +134,14 @@ networks:
   watchtower:
     name: watchtower
     driver: bridge
+  arcane-internal:
+    name: arcane-internal
+    driver: bridge
+    internal: true
+  watchtower-internal:
+    name: watchtower-internal
+    driver: bridge
+    internal: true
 ```
 * * *
 
@@ -138,27 +150,67 @@ networks:
 
 Services that need access to the Docker API do not directly expose the Docker socket to the container where possible.
 
-Instead, Docker API access is routed through a dedicated socket proxy.
+Instead, dedicated socket proxies are used.
 
-      Service
+                      ┌──────────────────────┐
+                      │       Docker         │
+                      │    Docker Socket     │
+                      └──────────┬───────────┘
+                                 │
+            ┌────────────────────┼────────────────────┐
+            │                    │                    │
+            ▼                    ▼                    ▼
+    ┌─────────────────┐  ┌─────────────────┐   ┌─────────────────┐
+    │  Read-only      │  │   Watchtower    │   │     Arcane      │
+    │  Socket Proxy   │  │  Socket Proxy   │   │  Socket Proxy   │
+    │                 │  │                 │   │                 │
+    │ Traefik         │  │ Watchtower      │   │ Arcane          │
+    │ Homepage        │  │                 │   │                 │
+    │ Dozzle          │  │ Container       │   │ Container       │
+    │ Uptime Kuma     │  │ updates         │   │ management      │
+    └─────────────────┘  └─────────────────┘   └─────────────────┘
 
-        │
-        ▼
-    socket-proxy:2375
 
-        │
-        ▼
-
-    Docker API
-
-The socket proxy is used by services such as:
+### Read-only Docker Proxy
 
 *   Traefik
 *   Homepage
 *   Dozzle
-*   Watchtower
+*   Uptime Kuma
 
-The proxy is configured to restrict access to only the Docker API operations required by the services.
+The proxy is configured for Docker API discovery without allowing container modifications.
+```
+CONTAINERS=1
+EVENTS=1
+NETWORKS=1
+INFO=1
+POST=0
+```
+
+### Watchtower Docker Proxy
+Watchtower has its own Docker API proxy because it needs permission to update containers.
+
+It is allowed to:
+* Read containers and images
+* Receive Docker events
+* Stop containers
+* Start containers
+* Restart containers
+* Recreate containers during updates
+
+
+### Arcane Docker Proxy
+Arcane has its own Docker API proxy because it is used as the Docker management interface.
+
+It has additional permissions required for container management, including:
+
+* Container operations
+* Image management
+* Network management
+* Volume management
+* Container execution
+
+This keeps Arcane's elevated Docker permissions isolated from services that only need read-only access.
 
 * * *
 
@@ -377,6 +429,8 @@ Sensitive files are excluded through `.gitignore`.
 -----------------------
 ```text
 .
+├── arcane/
+│   └── docker-compose.yml
 ├── cloudflared/
 │   └── docker-compose.yml
 │
@@ -523,6 +577,24 @@ This allows updates to be controlled on a per-service basis.
 
 * * *
 
+🛠️ Management
+------------------------
+
+Arcane is used as the primary Docker management interface.
+
+It provides a web interface for:
+
+* Viewing containers
+* Starting and stopping containers
+* Managing images
+* Managing Docker Compose projects
+* Viewing container logs
+* Managing Docker resources
+
+Arcane communicates with Docker through its own dedicated socket proxy.
+
+* * *
+
 🏗️ Compose Architecture
 ------------------------
 
@@ -539,6 +611,7 @@ Example:
 ```YAML
 
 include:
+  - ./arcane/docker-compose.yml
   - ./homepage/docker-compose.yml
   - ./traefik/docker-compose.yml
   - ./socket-proxy/docker-compose.yml
@@ -582,6 +655,7 @@ https://immich.${DOMAIN}
 https://vault.${DOMAIN}
 https://dns.${DOMAIN}
 https://uptime.${DOMAIN}
+https://arcane.${DOMAIN}
 https://dozzle.${DOMAIN}
 ```
 
@@ -592,19 +666,18 @@ The actual domain is configured through the `.env` file.
 🛡️ Security
 ------------
 
-Several security practices are used throughout the stack:
+The homelab follows a few basic security principles:
 
-*   Traefik handles HTTPS.
-*   Let's Encrypt provides TLS certificates.
-*   Cloudflare DNS is used for ACME DNS challenges.
-*   Cloudflare Tunnel provides external connectivity.
-*   Docker API access is routed through a socket proxy.
-*   Docker containers use `no-new-privileges` where appropriate.
-*   Traefik has `exposedByDefault: false`.
-*   Sensitive configuration is stored outside Git.
-*   Application data and databases are excluded from Git.
-*   Services are separated across dedicated Docker networks.
-
+* Docker socket is not directly exposed to applications.
+* Separate socket proxies are used for different privilege levels.
+* Read-only Docker API access is used wherever possible.
+* Docker containers use no-new-privileges where supported.
+* External services are exposed through Traefik.
+* HTTPS certificates are automatically managed through Cloudflare DNS challenge.
+* Automatic updates are opt-in through Watchtower labels.
+* Secrets and .env files are excluded from Git.
+* Persistent application data and databases are excluded from the configuration repository.
+* Internal Docker networks are used for infrastructure components that should not be externally reachable.
 
 * * *
 
@@ -698,7 +771,7 @@ Through it I'm gaining practical experience with:
 📸 Dashboard
 ------------
 
-![Homelab Dashboard](docs/images/homepage.jpg)
+![Homelab Dashboard](docs/images/homepage.png)
 
 * * *
 
